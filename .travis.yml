@@ -1,0 +1,43 @@
+sudo: required
+language: perl
+perl:
+   - "blead"
+   - "5.20"
+   - "5.18"
+   - "5.16"
+   - "5.14"
+   - "5.12"
+   - "5.10"
+   - "5.8"
+
+matrix:
+   include:
+      - perl: 5.18
+        env: COVERAGE=1      
+   allow_failures:
+      - perl: "blead"
+
+before_install:
+   - git clone git://github.com/travis-perl/helpers ~/travis-perl-helpers
+   - source ~/travis-perl-helpers/init
+   - build-perl
+   - perl -V
+   - unzip -h
+   - build-dist
+   - cd $BUILD_DIR             
+   - zip -T t/data/jar.zip
+   - zip -F t/data/jar.zip --out testfix.zip
+   - unzip -t testfix.zip
+
+install:
+   - cpan-install --deps
+   - cpan-install --coverage
+
+before_script:
+   - coverage-setup
+
+script:
+   - prove -lrsv -j$((SYSTEM_CORES + 1)) $(test-dirs) t
+
+after_success:
+   - coverage-report
